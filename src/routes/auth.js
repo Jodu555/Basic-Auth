@@ -3,6 +3,8 @@ const { jsonSuccess, jsonError } = require('../utils/jsonMessages');
 const { userRegisterSchema, userLoginSchema } = require('../utils/schemas');
 const router = express.Router();
 
+const mailValidationTokens = new Map();
+mailValidationTokens.set('fhizdbigbnikjhgdhbnkihgdjngdok', "USERID")
 
 router.get('/', (req, res) => {
 	res.json(jsonSuccess('Auth-Router works just fine'));
@@ -35,8 +37,9 @@ router.post('/login', (req, res) => {
     }
 });
 
-router.post('/emailValidate/:token', (req, res) => {
-    req.params.token;
+router.get('/emailValidation/:token', (req, res) => {
+    const token = req.params.token;
+    res.json(jsonSuccess(token));
 });
 
 module.exports = router;

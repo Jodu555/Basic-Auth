@@ -4,6 +4,8 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const auth = require('./routes/auth');
 const { jsonSuccess, jsonError } = require('./utils/jsonMessages');
+const mailer = require('./utils/mailer');
+const dotenv = require('dotenv').config();
 
 const app = express();
 app.use(cors());
