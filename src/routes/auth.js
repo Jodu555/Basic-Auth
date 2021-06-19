@@ -15,6 +15,9 @@ router.post('/register', (req, res) => {
     } else {
         const obj = jsonSuccess('Registered');
         const user = validation.value
+        //Add to Database
+
+        delete user.password;
         obj.user = user;
         res.json(obj);
     }
@@ -25,10 +28,9 @@ router.post('/login', (req, res) => {
     if(validation.error) {
         res.json(jsonError(validation.error.details[0].message));
     } else {
-        //Check if username || email && password is correct
+        //Check if username || email && password is correct from Database
         const obj = jsonSuccess('Logged In');
         const user = validation.value
-        obj.user = user;
         res.json(obj);
     }
 });
