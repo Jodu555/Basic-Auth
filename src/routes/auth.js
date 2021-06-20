@@ -1,10 +1,11 @@
 const express = require('express');
 const { jsonSuccess, jsonError } = require('../utils/jsonMessages');
 const { userRegisterSchema, userLoginSchema } = require('../utils/schemas');
+const { sendVerificationMessage } = require('../utils/mailer')
+const { v4 } = require('uuid');
 const router = express.Router();
 
 const mailValidationTokens = new Map();
-mailValidationTokens.set('fhizdbigbnikjhgdhbnkihgdjngdok', "USERID")
 
 router.get('/', (req, res) => {
 	res.json(jsonSuccess('Auth-Router works just fine'));
@@ -18,6 +19,14 @@ router.post('/register', (req, res) => {
         const obj = jsonSuccess('Registered');
         const user = validation.value
         //Add to Database
+
+        let token = '';
+        for (let i = 0; i < 7; i++) {
+            token += v4();
+        }
+        token = token.split('-').join('');
+        
+        sendVerificationMessage(user.username, user.email, token);
 
         delete user.password;
         obj.user = user;
