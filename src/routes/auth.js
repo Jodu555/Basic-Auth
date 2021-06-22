@@ -4,8 +4,13 @@ const { userRegisterSchema, userLoginSchema } = require('../utils/schemas');
 const { sendVerificationMessage } = require('../utils/mailer')
 const { v4 } = require('uuid');
 const router = express.Router();
+let database;
 
 const mailValidationTokens = new Map();
+
+function setDatabase(_database) {
+    database = _database;
+}
 
 router.get('/', (req, res) => {
 	res.json(jsonSuccess('Auth-Router works just fine'));
@@ -16,17 +21,16 @@ router.post('/register', (req, res) => {
     if(validation.error) {
         res.json(jsonError(validation.error.details[0].message));
     } else {
+        //TODO: Check if username and email is unique
         const obj = jsonSuccess('Registered');
         const user = validation.value
-        //Add to Database
-
-        let token = '';
-        for (let i = 0; i < 7; i++) {
-            token += v4();
-        }
-        token = token.split('-').join('');
+        const token = generateVerificationToken();
         
+        user.verificationToken = token;
+        user.uuid = v4();
+        database.createUser(user);
         sendVerificationMessage(user.username, user.email, token);
+
 
         delete user.password;
         obj.user = user;
@@ -51,4 +55,16 @@ router.get('/emailValidation/:token', (req, res) => {
     res.json(jsonSuccess(token));
 });
 
-module.exports = router;
+function generateVerificationToken() {
+    let token = '';
+    for (let i = 0; i < 7; i++) {
+        token += v4();
+    }
+    token = token.split('-').join('');
+    return token;
+}
+
+module.exports = {
+    router,
+    setDatabase
+};
