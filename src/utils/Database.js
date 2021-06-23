@@ -45,42 +45,46 @@ class Database {
 		);
 	}
 
-    //TODO: Update Users function (to update multiple users)
+	//TODO: Update Users function (to update multiple users)
 	async updateUser(search, user) {
-		this.removeKeyFromObject(user, 'uuid');
+		try {
+			this.removeKeyFromObject(user, 'uuid');
 
-        let uuid = '';
-        if(!search.uuid) {
-            const searchresult = await this.getUser(search);
-            uuid = searchresult[0].UUID;
-        } else {
-            uuid = search.uuid;
-        }
+            if(!Object.keys(user).length > 0) {
+                throw new Error('Invalid user update Object');
+            }
 
-		user.update = true;
-
-		let query = 'UPDATE accounts SET ';
-		const part = this.queryPartGeneration(user);
-		query += part.query;
-		query += ' WHERE UUID = ?';
-
-		const values = part.values;
-		values.push(uuid);
-
-		console.log(query, values);
-
-        this.connection.query(
-			query,
-			values,
-			(error, results, fields) => {
-				if (error) {
-                    throw error;
-					this.reconnect();
-					// this.updateUser(search, user);
-				}
+			let uuid = '';
+			if (!search.uuid) {
+				const searchresult = await this.getUser(search);
+				uuid = searchresult[0].UUID;
+			} else {
+				uuid = search.uuid;
 			}
-		);
-		return uuid;
+
+			user.update = true;
+
+			let query = 'UPDATE accounts SET ';
+			const part = this.queryPartGeneration(user);
+			query += part.query;
+			query += ' WHERE UUID = ?';
+
+			const values = part.values;
+			values.push(uuid);
+
+			console.log(query, values);
+
+			this.connection.query(query, values, (error, results, fields) => {
+				if (error) {
+					this.reconnect();
+					this.updateUser(search, user);
+				}
+			});
+			return await this.getUser({ uuid });
+		} catch (error) {
+            const errormsg = `User Update Failed: searchTerm: ${JSON.stringify(search)} Update: ${JSON.stringify(user)}  Error: ${error.message}`;
+            throw new Error(errormsg); 
+        }
 	}
 
 	async getUser(search) {
@@ -111,9 +115,9 @@ class Database {
 	queryPartGeneration(object) {
 		let query = '';
 		let delimiter = object.unique ? (object.unique ? 'OR' : 'AND') : 'AND';
-        delimiter = object.update ? ',' : delimiter;
-        this.removeKeyFromObject(object, 'unique');
-        this.removeKeyFromObject(object, 'update');
+		delimiter = object.update ? ',' : delimiter;
+		this.removeKeyFromObject(object, 'unique');
+		this.removeKeyFromObject(object, 'update');
 
 		const keys = Object.keys(object);
 		let values = [];

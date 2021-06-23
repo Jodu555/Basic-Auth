@@ -31,6 +31,6 @@ app.listen(PORT, async () => {
     // console.log(await database.getUser({unique: true, username: 'Test', email: 'Jodu505@gmail.com'}));
     // console.log(await database.getUser({UUID: 'eaf30e69-1214-47e6-b37e-6838eb2bd813'}));
 
-    // const res = await database.updateUser({username: 'Test'}, {UUID: 'null', email: 'test@test.com', verified: 'true'});
+    // const res = await database.updateUser({username: 'Test'}, {UUID: 'null'});
     // console.log(res);
 });
