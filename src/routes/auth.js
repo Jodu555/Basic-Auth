@@ -6,7 +6,7 @@ const { v4 } = require('uuid');
 const router = express.Router();
 let database;
 
-const mailValidationTokens = new Map();
+const authTokens = new Map();
 
 function setDatabase(_database) {
     database = _database;
@@ -38,15 +38,22 @@ router.post('/register', (req, res) => {
     }
 });
 
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
     const validation = userLoginSchema.validate(req.body);
     if(validation.error) {
         res.json(jsonError(validation.error.details[0].message));
     } else {
-        //TODO: Check if username || email && password is correct from Database
-        const obj = jsonSuccess('Logged In');
         const user = validation.value
-        res.json(obj);
+        const searchuser = user;
+        searchuser.unique = true;
+        const result = await database.getUser(searchuser);
+        if(result.length > 0) {
+            res.json(jsonSuccess('Successfully logged In'));
+            //TODO: send back an auth token
+        } else {
+            const value = user.username ? 'username' : 'email';
+            res.json(jsonError('Invalid ' + value + ' and password'))
+        }
     }
 });
 
