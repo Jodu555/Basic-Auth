@@ -43,7 +43,7 @@ router.post('/login', (req, res) => {
     if(validation.error) {
         res.json(jsonError(validation.error.details[0].message));
     } else {
-        //Check if username || email && password is correct from Database
+        //TODO: Check if username || email && password is correct from Database
         const obj = jsonSuccess('Logged In');
         const user = validation.value
         res.json(obj);
@@ -52,6 +52,7 @@ router.post('/login', (req, res) => {
 
 router.get('/emailValidation/:token', (req, res) => {
     const token = req.params.token;
+    //TODO: Check if is Valid from Database
     res.json(jsonSuccess(token));
 });
 

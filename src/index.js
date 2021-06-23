@@ -25,8 +25,9 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3100;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
 	console.log(`Express App Listening on ${PORT}`);
 
-    database.getUser({username: 'Test'});
+    console.log(await database.getUser({unique: true, username: 'Test', email: 'Jodu505@gmail.com'}));
+    console.log(await database.getUser({UUID: 'eaf30e69-1214-47e6-b37e-6838eb2bd813'}));
 });

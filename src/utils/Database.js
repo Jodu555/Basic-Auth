@@ -5,10 +5,10 @@ class Database {
 
 	connect() {
 		this.connection = mysql.createConnection({
-			host: 'localhost',
-			user: 'root',
-			password: '',
-			database: 'basicAuth',
+			host: process.env.DB_HOST,
+			user: process.env.DB_USER,
+			password: process.env.DB_PASSWORD,
+			database: process.env.DB_DATABASE,
 		});
 		this.connection.connect();
 	}
@@ -47,9 +47,35 @@ class Database {
 
 	updateUser(user) {}
 
-	getUser(search) {
-        console.log('Search for user with ', search);
-    }
+	async getUser(search) {
+        const delimiter = search.unique ? search.unique ? 'OR' : 'AND' : 'AND';
+        delete search.unique;
+		let query = 'SELECT * FROM accounts WHERE ';
+		const keys = Object.keys(search);
+		let values = [];
+		let i = 0;
+		keys.forEach((key) => {
+			i++;
+			values.push(search[key]);
+			query += key + ' = ?';
+			if (i < keys.length) query += ` ${delimiter} `;
+		});
+        return new Promise(async (resolve, reject) => {
+            await this.connection.query(query, values, async (error, results, fields)  => {
+                const data = [];
+                if (error) {
+                    throw error;
+                    this.reconnect();
+                    this.getUser(search);
+                }
+                await results.forEach((result) => {
+                    data.push(result);
+                });
+                resolve(data);
+            });
+        })
+		
+	}
 }
 
 module.exports = Database;
