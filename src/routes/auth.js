@@ -50,10 +50,8 @@ router.post('/login', async (req, res) => {
     if(validation.error) {
         res.json(jsonError(validation.error.details[0].message));
     } else {
-        const user = validation.value
-        const searchuser = user;
-        searchuser.unique = true;
-        const result = await database.getUser(searchuser);
+        const user = validation.value;
+        const result = await database.getUser({...user, unique: true});
         if(result.length > 0) {
             res.json(jsonSuccess('Successfully logged In'));
             //TODO: send back an auth token
