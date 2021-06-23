@@ -50,9 +50,17 @@ router.post('/login', (req, res) => {
     }
 });
 
-router.get('/emailValidation/:token', (req, res) => {
+router.get('/emailValidation/:token', async (req, res) => {
     const token = req.params.token;
     //TODO: Check if is Valid from Database
+    const result = await database.getUser({
+        unique: true,
+        verificationToken: token,
+    });
+
+    if(result.length > 0) {
+        const response = jsonSuccess('Valid Token! Account verified!');
+    }
     res.json(jsonSuccess(token));
 });
 

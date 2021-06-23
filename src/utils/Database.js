@@ -45,36 +45,98 @@ class Database {
 		);
 	}
 
-	updateUser(user) {}
+    //TODO: Update Users function (to update multiple users)
+	async updateUser(search, user) {
+		this.removeKeyFromObject(user, 'uuid');
+
+        let uuid = '';
+        if(!search.uuid) {
+            const searchresult = await this.getUser(search);
+            uuid = searchresult[0].UUID;
+        } else {
+            uuid = search.uuid;
+        }
+
+		user.update = true;
+
+		let query = 'UPDATE accounts SET ';
+		const part = this.queryPartGeneration(user);
+		query += part.query;
+		query += ' WHERE UUID = ?';
+
+		const values = part.values;
+		values.push(uuid);
+
+		console.log(query, values);
+
+        this.connection.query(
+			query,
+			values,
+			(error, results, fields) => {
+				if (error) {
+                    throw error;
+					this.reconnect();
+					// this.updateUser(search, user);
+				}
+			}
+		);
+		return uuid;
+	}
 
 	async getUser(search) {
-        const delimiter = search.unique ? search.unique ? 'OR' : 'AND' : 'AND';
-        delete search.unique;
 		let query = 'SELECT * FROM accounts WHERE ';
-		const keys = Object.keys(search);
+		const part = this.queryPartGeneration(search);
+		query += part.query;
+		const values = part.values;
+		return new Promise(async (resolve, reject) => {
+			await this.connection.query(
+				query,
+				values,
+				async (error, results, fields) => {
+					const data = [];
+					if (error) {
+						throw error;
+						this.reconnect();
+						this.getUser(search);
+					}
+					await results.forEach((result) => {
+						data.push(result);
+					});
+					resolve(data);
+				}
+			);
+		});
+	}
+
+	queryPartGeneration(object) {
+		let query = '';
+		let delimiter = object.unique ? (object.unique ? 'OR' : 'AND') : 'AND';
+        delimiter = object.update ? ',' : delimiter;
+        this.removeKeyFromObject(object, 'unique');
+        this.removeKeyFromObject(object, 'update');
+
+		const keys = Object.keys(object);
 		let values = [];
 		let i = 0;
 		keys.forEach((key) => {
 			i++;
-			values.push(search[key]);
+			values.push(object[key]);
 			query += key + ' = ?';
 			if (i < keys.length) query += ` ${delimiter} `;
 		});
-        return new Promise(async (resolve, reject) => {
-            await this.connection.query(query, values, async (error, results, fields)  => {
-                const data = [];
-                if (error) {
-                    throw error;
-                    this.reconnect();
-                    this.getUser(search);
-                }
-                await results.forEach((result) => {
-                    data.push(result);
-                });
-                resolve(data);
-            });
-        })
-		
+		return {
+			values,
+			query,
+		};
+	}
+
+	removeKeyFromObject(obj, removeKey) {
+		const keys = Object.keys(obj);
+		keys.forEach((key) => {
+			if (key.toLowerCase() == removeKey.toLowerCase()) {
+				delete obj[key];
+			}
+		});
 	}
 }
 
