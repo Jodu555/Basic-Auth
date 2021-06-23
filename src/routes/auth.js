@@ -52,16 +52,21 @@ router.post('/login', (req, res) => {
 
 router.get('/emailValidation/:token', async (req, res) => {
     const token = req.params.token;
-    //TODO: Check if is Valid from Database
     const result = await database.getUser({
         unique: true,
         verificationToken: token,
+        verified: 'false',
     });
-
     if(result.length > 0) {
+        const user = await database.updateUser({uuid: result[0].UUID}, {verified: 'true', verificationToken: ''});
         const response = jsonSuccess('Valid Token! Account verified!');
+        response.user = user[0];
+        delete response.user.password;
+        res.json(response);
+    } else {
+        res.json(jsonError('Invalid Token please Try Again!'));
     }
-    res.json(jsonSuccess(token));
+    
 });
 
 function generateVerificationToken() {

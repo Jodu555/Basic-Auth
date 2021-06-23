@@ -72,15 +72,13 @@ class Database {
 			const values = part.values;
 			values.push(uuid);
 
-			console.log(query, values);
-
 			this.connection.query(query, values, (error, results, fields) => {
 				if (error) {
 					this.reconnect();
 					this.updateUser(search, user);
 				}
 			});
-			return await this.getUser({ uuid });
+			return await this.getUser({ uuid: uuid });
 		} catch (error) {
             const errormsg = `User Update Failed: searchTerm: ${JSON.stringify(search)} Update: ${JSON.stringify(user)}  Error: ${error.message}`;
             throw new Error(errormsg); 
@@ -114,7 +112,7 @@ class Database {
 
 	queryPartGeneration(object) {
 		let query = '';
-		let delimiter = object.unique ? (object.unique ? 'OR' : 'AND') : 'AND';
+		let delimiter = !object.unique ? (!object.unique ? 'OR' : 'AND') : 'AND';
 		delimiter = object.update ? ',' : delimiter;
 		this.removeKeyFromObject(object, 'unique');
 		this.removeKeyFromObject(object, 'update');
