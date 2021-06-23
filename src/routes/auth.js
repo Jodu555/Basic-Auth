@@ -16,25 +16,32 @@ router.get('/', (req, res) => {
 	res.json(jsonSuccess('Auth-Router works just fine'));
 });
 
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
     const validation = userRegisterSchema.validate(req.body);
     if(validation.error) {
         res.json(jsonError(validation.error.details[0].message));
     } else {
-        //TODO: Check if username and email is unique
-        const obj = jsonSuccess('Registered');
         const user = validation.value
-        const token = generateVerificationToken();
-        
-        user.verificationToken = token;
-        user.uuid = v4();
-        database.createUser(user);
-        sendVerificationMessage(user.username, user.email, token);
+        const search = {...user}; //Spreading to disable the reference
+        delete search.password;
+        search.unique = true;
+        const result = await database.getUser(search);
 
-
-        delete user.password;
-        obj.user = user;
-        res.json(obj);
+        if(result.length == 0) {
+            const obj = jsonSuccess('Registered');
+            const token = generateVerificationToken();
+            user.verificationToken = token;
+            user.uuid = v4();
+            await database.createUser(user);
+            sendVerificationMessage(user.username, user.email, token);
+    
+            delete user.password;
+            delete user.verificationToken;
+            obj.user = user;
+            res.json(obj);
+        } else {
+            res.json(jsonError('The email or the username is already taken!'));
+        }
     }
 });
 
