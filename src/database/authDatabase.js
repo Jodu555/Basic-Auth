@@ -1,28 +1,7 @@
-const mysql = require('mysql');
-class Database {
-	connection = null;
-	constructor() {}
-
-	connect() {
-		this.connection = mysql.createConnection({
-			host: process.env.DB_HOST,
-			user: process.env.DB_USER,
-			password: process.env.DB_PASSWORD,
-			database: process.env.DB_DATABASE,
-		});
-		this.connection.connect();
-	}
-
-	disconnect() {
-		if (this.connection != null) {
-			this.connection.end();
-			this.connection = null;
-		}
-	}
-
-	reconnect() {
-		this.disconnect();
-		this.connect();
+class authDatabase {
+	constructor(connection) {
+		this.connection = connection;
+		console.log('Initialized');
 	}
 
 	createUser(user) {
@@ -50,9 +29,9 @@ class Database {
 		try {
 			this.removeKeyFromObject(user, 'uuid');
 
-            if(!Object.keys(user).length > 0) {
-                throw new Error('Invalid user update Object');
-            }
+			if (!Object.keys(user).length > 0) {
+				throw new Error('Invalid user update Object');
+			}
 
 			let uuid = '';
 			if (!search.uuid) {
@@ -80,9 +59,11 @@ class Database {
 			});
 			return await this.getUser({ uuid: uuid });
 		} catch (error) {
-            const errormsg = `User Update Failed: searchTerm: ${JSON.stringify(search)} Update: ${JSON.stringify(user)}  Error: ${error.message}`;
-            throw new Error(errormsg); 
-        }
+			const errormsg = `User Update Failed: searchTerm: ${JSON.stringify(
+				search
+			)} Update: ${JSON.stringify(user)}  Error: ${error.message}`;
+			throw new Error(errormsg);
+		}
 	}
 
 	async getUser(search) {
@@ -142,4 +123,4 @@ class Database {
 	}
 }
 
-module.exports = Database;
+module.exports = authDatabase;

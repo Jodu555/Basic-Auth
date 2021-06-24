@@ -1,6 +1,6 @@
 const express = require('express');
 const { jsonSuccess, jsonError } = require('../utils/jsonMessages');
-const { userRegisterSchema, userLoginSchema } = require('../utils/schemas');
+const { userRegisterSchema, userLoginSchema } = require('../database/schemas');
 const { sendVerificationMessage } = require('../utils/mailer')
 const { v4 } = require('uuid');
 const router = express.Router();
@@ -25,14 +25,14 @@ router.post('/register', async (req, res) => {
         const search = {...user}; //Spreading to disable the reference
         delete search.password;
         search.unique = true;
-        const result = await database.getUser(search);
+        const result = await database.getAuth.getUser(search);
 
         if(result.length == 0) {
             const obj = jsonSuccess('Registered');
             const token = generateVerificationToken();
             user.verificationToken = token;
             user.uuid = v4();
-            await database.createUser(user);
+            await database.getAuth.createUser(user);
             sendVerificationMessage(user.username, user.email, token);
     
             delete user.password;
@@ -51,7 +51,7 @@ router.post('/login', async (req, res) => {
         res.json(jsonError(validation.error.details[0].message));
     } else {
         const user = validation.value;
-        const result = await database.getUser({...user, unique: true});
+        const result = await database.getAuth.getUser({...user, unique: true});
         if(result.length > 0) {
             res.json(jsonSuccess('Successfully logged In'));
             //TODO: send back an auth token
@@ -64,13 +64,13 @@ router.post('/login', async (req, res) => {
 
 router.get('/emailValidation/:token', async (req, res) => {
     const token = req.params.token;
-    const result = await database.getUser({
+    const result = await database.getAuth.getUser({
         unique: true,
         verificationToken: token,
         verified: 'false',
     });
     if(result.length > 0) {
-        const user = await database.updateUser({uuid: result[0].UUID}, {verified: 'true', verificationToken: ''});
+        const user = await database.getAuth.updateUser({uuid: result[0].UUID}, {verified: 'true', verificationToken: ''});
         const response = jsonSuccess('Valid Token! Account verified!');
         response.user = user[0];
         delete response.user.password;

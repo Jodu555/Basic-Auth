@@ -5,7 +5,7 @@ const helmet = require('helmet');
 const { router: auth, setDatabase: auth_setDatabase } = require('./routes/auth');
 const { jsonSuccess, jsonError } = require('./utils/jsonMessages');
 const dotenv = require('dotenv').config();
-const Database = require('./utils/Database');
+const Database = require('./database/Database');
 
 const database = new Database();
 database.connect();
