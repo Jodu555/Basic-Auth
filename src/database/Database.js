@@ -13,7 +13,8 @@ class Database {
 			database: process.env.DB_DATABASE,
 		});
 		this.connection.connect();
-		this.authDatabase = new AuthDatabase(this.connection);
+		//Setup all databases here
+		this.authDatabase = new AuthDatabase(this, this.connection);
 	}
 
 	disconnect() {

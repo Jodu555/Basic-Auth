@@ -1,5 +1,7 @@
+const { queryPartGeneration, removeKeyFromObject } = require('./utils');
 class authDatabase {
-	constructor(connection) {
+	constructor(database, connection) {
+		this.database = database;
 		this.connection = connection;
 		console.log('Initialized');
 	}
@@ -17,7 +19,7 @@ class authDatabase {
 			],
 			(error, results, fields) => {
 				if (error) {
-					this.reconnect();
+					this.database.reconnect();
 					this.createUser(user);
 				}
 			}
@@ -27,7 +29,7 @@ class authDatabase {
 	//TODO: Update Users function (to update multiple users)
 	async updateUser(search, user) {
 		try {
-			this.removeKeyFromObject(user, 'uuid');
+			removeKeyFromObject(user, 'uuid');
 
 			if (!Object.keys(user).length > 0) {
 				throw new Error('Invalid user update Object');
@@ -44,7 +46,7 @@ class authDatabase {
 			user.update = true;
 
 			let query = 'UPDATE accounts SET ';
-			const part = this.queryPartGeneration(user);
+			const part = queryPartGeneration(user);
 			query += part.query;
 			query += ' WHERE UUID = ?';
 
@@ -53,7 +55,7 @@ class authDatabase {
 
 			this.connection.query(query, values, (error, results, fields) => {
 				if (error) {
-					this.reconnect();
+					this.database.reconnect();
 					this.updateUser(search, user);
 				}
 			});
@@ -68,7 +70,7 @@ class authDatabase {
 
 	async getUser(search) {
 		let query = 'SELECT * FROM accounts WHERE ';
-		const part = this.queryPartGeneration(search);
+		const part = queryPartGeneration(search);
 		query += part.query;
 		const values = part.values;
 		return new Promise(async (resolve, reject) => {
@@ -79,7 +81,7 @@ class authDatabase {
 					const data = [];
 					if (error) {
 						throw error;
-						this.reconnect();
+						this.database.reconnect();
 						this.getUser(search);
 					}
 					await results.forEach((result) => {
@@ -88,37 +90,6 @@ class authDatabase {
 					resolve(data);
 				}
 			);
-		});
-	}
-
-	queryPartGeneration(object) {
-		let query = '';
-		let delimiter = !object.unique ? (!object.unique ? 'OR' : 'AND') : 'AND';
-		delimiter = object.update ? ',' : delimiter;
-		this.removeKeyFromObject(object, 'unique');
-		this.removeKeyFromObject(object, 'update');
-
-		const keys = Object.keys(object);
-		let values = [];
-		let i = 0;
-		keys.forEach((key) => {
-			i++;
-			values.push(object[key]);
-			query += key + ' = ?';
-			if (i < keys.length) query += ` ${delimiter} `;
-		});
-		return {
-			values,
-			query,
-		};
-	}
-
-	removeKeyFromObject(obj, removeKey) {
-		const keys = Object.keys(obj);
-		keys.forEach((key) => {
-			if (key.toLowerCase() == removeKey.toLowerCase()) {
-				delete obj[key];
-			}
 		});
 	}
 }
