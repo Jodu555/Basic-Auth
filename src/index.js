@@ -25,7 +25,24 @@ app.get('/', (req, res) => {
 });
 
 function authentication(req, res, next) {
-	console.log(req.body);
+	const token = req.headers['auth-token'];
+	if(token) {
+		if(token == token) {
+			console.log(token);
+			req.credentials = {
+				token,
+				user: {
+					name: 'test'
+				}
+			};
+			next();
+		} else {
+			res.status(401).json(jsonError('Invalid auth-token'))
+		}
+	} else {
+		res.status(401).json(jsonError('Missing auth-token in headers'))
+	}
+	
 }
 
 const PORT = process.env.PORT || 3100;
