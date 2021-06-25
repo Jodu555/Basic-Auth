@@ -46,9 +46,11 @@ const login = async (req, res, next) => {
         const user = validation.value;
         const result = await database.getAuth.getUser({...user, unique: true});
         if(result.length > 0) {
-            res.json(jsonSuccess('Successfully logged In'));
-            authManager.addToken(v4(), user);
-            //TODO: send back an auth token
+            const obj = jsonSuccess('Successfully logged In');
+            const token = v4();
+            obj.token = token;
+            authManager.addToken(token, user)
+            res.json(obj);
         } else {
             const value = user.username ? 'username' : 'email';
             res.json(jsonError('Invalid ' + value + ' and password'))
