@@ -18,11 +18,15 @@ app.use(morgan('tiny'));
 app.use(helmet());
 app.use(express.json());
 
-app.use('/auth', auth);
+app.use('/auth', authentication, auth);
 
 app.get('/', (req, res) => {
 	res.json(jsonSuccess('Basic Auth API works just fine!'));
 });
+
+function authentication(req, res, next) {
+	console.log(req.body);
+}
 
 const PORT = process.env.PORT || 3100;
 app.listen(PORT, async () => {
