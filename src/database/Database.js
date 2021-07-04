@@ -1,9 +1,8 @@
 const mysql = require('mysql');
-const AuthDatabase = require('./authDatabase');
 class Database {
 	connection = null;
 
-	constructor() {}
+	constructor() { }
 
 	connect() {
 		this.connection = mysql.createConnection({
@@ -13,6 +12,17 @@ class Database {
 			database: process.env.DB_DATABASE,
 		});
 		this.connection.connect();
+		this.connection.on('error', (error) => {
+			console.log('Database error', error);
+			if (error.code === 'PROTOCOL_CONNECTION_LOST') {
+				console.log('Database connection Failed!');
+				console.log('Attempting to reconnect...');
+				this.reconnect();
+			} else {
+				throw error;
+			}
+		});
+
 		//Setup all databases here
 		this.authDatabase = new AuthDatabase(this, this.connection);
 	}
